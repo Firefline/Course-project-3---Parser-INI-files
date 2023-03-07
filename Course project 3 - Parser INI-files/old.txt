@@ -1,0 +1,81 @@
+// Course project 3 - Parser INI-files.cpp : Этот файл содержит функцию "main". Здесь начинается и заканчивается выполнение программы.
+//
+
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+#include <list>
+
+class ini_parser
+{
+protected:
+    std::string section_name = "";
+    std::string section_value = "";
+    std::string value = "";
+    std::string section_comment = "";
+
+    char symbol = 0;
+
+    std::vector<unsigned char> temp_vector;
+
+    std::pair<std::string, std::string> section;
+    std::pair<std::string, char> parameter;
+    std::list<std::string> summary;
+public:
+    ini_parser() {};
+    ini_parser(std::string path)
+    {
+        std::ifstream fin;
+        fin.open(path);
+
+        while (!fin.eof())
+        {
+            section_name.clear();
+            section_value.clear();
+            value.clear();
+            section_comment.clear();
+
+            fin.get(symbol);
+
+            if (symbol == '[')
+            {
+                fin.get(symbol);
+                while (symbol != ']')
+                {
+                    temp_vector.push_back(symbol);
+                    fin.get(symbol);
+                }
+                for (auto c : temp_vector)
+                {
+                    section_name.push_back(c);
+                }
+                temp_vector.clear();
+                fin.get(symbol);
+                summary.push_back(section_name);
+            }
+            if (symbol == ';')
+            {
+                while (symbol != '\n')
+                {
+                    fin.get(symbol);
+                }
+                fin.get(symbol);
+            }
+        }
+        fin.close();
+        for (auto c : summary)
+        {
+            std::cout << c << " ";
+        }
+    }
+};
+
+int main(int argc, char** argv)
+{
+    setlocale(LC_ALL, "Russian");
+
+    ini_parser parser("test.ini");
+
+    return 0;
+}
