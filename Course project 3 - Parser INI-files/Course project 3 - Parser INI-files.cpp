@@ -7,6 +7,12 @@
 #include <string>
 #include <list>
 
+class DivisionByZeroException : public std::exception
+{
+public:
+    const char* what() const override { return "Значение не найдено"; }
+};
+
 class ini_parser
 {
 protected:
@@ -103,8 +109,7 @@ public:
             fin.close();
         }
     }
-    template <class T>
-    T get_value(std::string parameter)
+    std::string get_value_str(std::string parameter)
     {
         int count = 0;
         for (auto iter = section.begin(); iter != section.end(); iter++)
@@ -113,15 +118,41 @@ public:
             {
                 iter++;
                 count++;
-                std::cout << *iter;
                 return *iter;
-            }
+            }            
         }
         if (count == 0)
         {
-            std::cout << "Значение не найдено" << std::endl;
-            return " ";
+            throw  DivisionByZeroException();
         }
+    }
+    template <class T>
+    T get_value(std::string parameter)
+    {
+        std::string val_str = get_value_str(parameter);
+        return static_cast<T>(std::stoi(val_str));
+    }
+    template<>
+    std::string get_value(std::string parameter)
+    {
+        return get_value_str(parameter);
+    }
+    template<>
+    double get_value(std::string parameter)
+    {
+        std::string val_str = get_value_str(parameter);
+        return static_cast<double>(std::stoi(val_str));
+    }
+    template<>
+    int get_value(std::string parameter)
+    {
+        std::string val_str = get_value_str(parameter);
+        return static_cast<int>(std::stoi(val_str));
+    }
+    float get_value(std::string parameter)
+    {
+        std::string val_str = get_value_str(parameter);
+        return static_cast<float>(std::stoi(val_str));
     }
 };
 
@@ -131,7 +162,23 @@ int main(int argc, char** argv)
 
     ini_parser parser("test.ini");
 
-    auto values = parser.get_value<std::string>("Section_1.Var_1");
+    try
+    {
+        std::cout << "String: " << parser.get_value<std::string>("Section_3.Var_1") << std::endl;
+        std::cout << "Int: " << parser.get_value<int>("Section_1.Var_1") << std::endl;
+        std::cout << "Double: " << parser.get_value<double>("Section_3.Var_2") << std::endl;
+        std::cout << "Float: " << parser.get_value<float>("Section_3.Var_3") << std::endl;
+        std::cout << "When error happening: ";
+        parser.get_value<float>("Section_2.Var_1");
+    }
+    catch (const DivisionByZeroException& ex) 
+    { 
+        std::cout << ex.what() << std::endl;
+    }
+    catch (...)
+    {
+        std::cout << "Неизвестная ошибка" << std::endl;
+    }
 
     return 0;
 }
